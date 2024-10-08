@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "154572803541",
+    "project_id": "maid-easy-a37f6",
+    "storage_bucket": "maid-easy-a37f6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154572803541:android:c0029856c08ce3dd66015c",
+        "android_client_info": {
+          "package_name": "com.example.maid_easy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLg_92D9ELGYCKITlngp3ZEt_aD5FydVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
