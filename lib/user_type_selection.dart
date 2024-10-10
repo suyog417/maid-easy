@@ -3,7 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
-import 'package:maid_easy/screens/bloc/database.dart';
+import 'package:maid_easy/maid/home_screen_maid.dart';
+import 'package:maid_easy/api/database.dart';
 import 'package:maid_easy/screens/home_screen.dart';
 
 class UserTypeSelection extends StatelessWidget {
@@ -25,8 +26,8 @@ class UserTypeSelection extends StatelessWidget {
             OutlinedButton(onPressed: () {
               context.read<DatabaseBloc>().connectDB();
               Hive.box("UserData").put("isMaid",true).whenComplete(() {
-                Navigator.popUntil(context, (route) => route.isFirst,);
-                Navigator.push(context, CupertinoPageRoute(builder: (context) => const HomeScreen(),));
+                // Navigator.popUntil(context, (route) => route.isFirst,);
+                // Navigator.push(context, CupertinoPageRoute(builder: (context) => const HomeScreenMaid(),));
               },);
             },style: OutlinedButton.styleFrom(
               textStyle: Theme.of(context).textTheme.titleLarge!.copyWith(
@@ -39,8 +40,8 @@ class UserTypeSelection extends StatelessWidget {
             OutlinedButton(onPressed: () {
               context.read<DatabaseBloc>().connectDB();
               Hive.box("UserData").put("isMaid",false).whenComplete(() {
-                Navigator.popUntil(context, (route) => route.isFirst,);
-                Navigator.push(context, CupertinoPageRoute(builder: (context) => const HomeScreen(),));
+                // Navigator.popUntil(context, (route) => route.isFirst,);
+                // Navigator.push(context, CupertinoPageRoute(builder: (context) => const HomeScreen(),));
               },);
             },style: OutlinedButton.styleFrom(
                 textStyle: Theme.of(context).textTheme.titleLarge!.copyWith(

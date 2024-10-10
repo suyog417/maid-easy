@@ -2,19 +2,21 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:maid_easy/screens/book_appointment.dart';
 
 class AppointmentInfo extends StatelessWidget {
   final String fullName;
   final String phone;
-  final List prefferedWork;
-  final List prefferedLocation;
+  final List preferredWork;
+  final List preferredLocation;
   final List workingDay;
   final List timeSLots;
   final int charges;
   final String tag;
+  final double rating;
 
-  const AppointmentInfo({super.key, required this.tag, required this.fullName, required this.phone, required this.prefferedWork, required this.prefferedLocation, required this.workingDay, required this.timeSLots, required this.charges});
+  const AppointmentInfo({super.key, required this.tag, required this.fullName, required this.phone, required this.preferredWork, required this.preferredLocation, required this.workingDay, required this.timeSLots, required this.charges, required this.rating});
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,7 @@ class AppointmentInfo extends StatelessWidget {
                   children: [
                      AutoSizeText(fullName,style: Theme.of(context).textTheme.titleLarge,),
                     Wrap(
-                      children: List.generate(prefferedWork.length, (index) => AutoSizeText(prefferedWork.elementAtOrNull(index)),),
+                      children: List.generate(preferredWork.length, (index) => AutoSizeText(preferredWork.elementAtOrNull(index)),),
                     ),
                     InkWell(
                       onTap: () => Clipboard.setData( ClipboardData(text: phone)),
@@ -75,6 +77,16 @@ class AppointmentInfo extends StatelessWidget {
             height: 8,
           ),
           AutoSizeText("Reviews", style: Theme.of(context).textTheme.titleLarge),
+          RatingBarIndicator(
+            rating: rating,
+              itemBuilder: (context, index) => const Icon(
+            Icons.star,
+            color: Colors.amber,
+          ),
+            itemCount: 5,
+            itemSize: 50.0,
+            direction: Axis.horizontal,
+          )
         ],
       ),
       bottomNavigationBar: Padding(

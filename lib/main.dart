@@ -6,11 +6,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:maid_easy/maid/home_screen_maid.dart';
+import 'package:maid_easy/maid/user_registration_maid.dart';
+import 'package:maid_easy/on_boarding/add_address.dart';
 import 'package:maid_easy/on_boarding/bloc/on_boarding_cubit.dart';
 import 'package:maid_easy/on_boarding/bloc/sign_in_bloc.dart';
 import 'package:maid_easy/on_boarding/welcome.dart';
 import 'package:maid_easy/screens/bloc/categories_bloc.dart';
-import 'package:maid_easy/screens/bloc/database.dart';
+import 'package:maid_easy/api/database.dart';
+import 'package:maid_easy/screens/bloc/create_job_bloc.dart';
 import 'package:maid_easy/screens/home_screen.dart';
 import 'package:maid_easy/user_type_selection.dart';
 
@@ -18,6 +21,7 @@ import 'package:maid_easy/user_type_selection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CachedNetworkImage.logLevel = CacheManagerLogLevel.debug;
+  DatabaseBloc().connectDB();
   await Hive.initFlutter();
   await Hive.openBox("UserData");
   await Firebase.initializeApp();
@@ -34,7 +38,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => OnBoardingCubit(),),
         BlocProvider(create: (context) => SignInCubit(),),
         BlocProvider(create: (context) => CategoriesCubit(),),
-        BlocProvider(create: (context) => DatabaseBloc(),)
+        BlocProvider(create: (context) => DatabaseBloc(),),
+        BlocProvider(create: (context) => CreateJobBloc(),)
       ],
       child: MaterialApp(
         title: 'MaidEasy',
@@ -43,7 +48,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSwatch(
             accentColor: Colors.lightBlueAccent,
-            primarySwatch: Colors.lightBlue
+            primarySwatch: Colors.blue
           ),
           filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
@@ -53,20 +58,30 @@ class MyApp extends StatelessWidget {
         ),
         home: BlocBuilder<SignInCubit,SignInState>(
           builder: (context, state) {
-
             if(state is AuthLoggedOutState){
               return const Welcome();
             }
             if(state is AuthLoggedInState){
-              if(Hive.box("UserData").get('address') == null){
-                return const HomeScreen();
-                // return const UserTypeSelection();
-              }
-              // if(Hive.box("UserData").get('isMaid',defaultValue: false)){
-              //
-              // } else {
-              //   return const HomeScreenMaid();
-              // }
+              return BlocBuilder<OnBoardingCubit,OnBoardingStates>(
+                builder: (context, onBoardingState) {
+                  context.read<DatabaseBloc>().connectDB();
+                  if(onBoardingState is UserTypeNotSelectedState){
+                    return const UserTypeSelection();
+                  }
+                if(onBoardingState is CustomerDataMissingState){
+                  return const AddAddress();
+                }
+                if(onBoardingState is CustomerUserState){
+                  return const HomeScreen();
+                }
+                if(onBoardingState is MaidDataMissingState){
+                 return  const UserRegistrationMaid();
+                }
+                if(onBoardingState is MaidUserState){
+                  return const HomeScreenMaid();
+                }
+                return const Scaffold();
+              },);
             }
             if(state is AuthErrorState){
               return Scaffold(

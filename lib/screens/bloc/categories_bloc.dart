@@ -19,7 +19,9 @@ class CategoriesCubit extends Cubit<CategoriesStates>{
     "Babysitting/Nanny Services",
     "Care taking/Elder Care Services","Pet Care Services","Gardening Services"];
 
-  void setData() => emit(CategoriesLoadedState(categories));
+  void setData() {
+
+  }
 
   void search(String query) {
     emit(CategoriesLoadedState(categories.where((element) => element.toLowerCase().contains(query.toLowerCase()),).toList()));

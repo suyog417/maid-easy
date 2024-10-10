@@ -1,3 +1,4 @@
+import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:maid_easy/screens/appointment_info.dart';
-import 'package:maid_easy/screens/bloc/database.dart';
+import 'package:maid_easy/api/database.dart';
 import 'package:maid_easy/screens/categories.dart';
 import 'package:maid_easy/screens/notifications.dart';
 import 'package:maid_easy/screens/user_profile.dart';
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int navigationBarIndex = 0;
   @override
   Widget build(BuildContext context) {
+    context.read<DatabaseBloc>().getMaidCollection("");
     List<Widget> screens = [
       HomeScreenWidget(navBarIndex: navigationBarIndex,onTap: () {
         setState(() {
@@ -104,38 +106,41 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   final user = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
-    context.read<DatabaseBloc>().connectDB();
     final textTheme = Theme.of(context).textTheme;
-    context.read<DatabaseBloc>().getAllCollection("maids");
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () async {
-          context.read<DatabaseBloc>().getAllCollection("");
+          context.read<DatabaseBloc>().getMaidCollection("");
         },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  child: RandomAvatar(user?.displayName ?? "suyog", height: 50, width: 50),
-                ),
-                const VerticalDivider(),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AutoSizeText(
-                      user?.displayName ?? "Suyog",
-                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    AutoSizeText(Hive.box("UserData").get("address") ?? "")
-                  ],
-                )
-              ],
-            ),
-            const SizedBox(
-              height: kToolbarHeight,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: kToolbarHeight / 2),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: MediaQuery.sizeOf(context).width * 0.08,
+                    child: RandomAvatar(user?.displayName ?? "suyog"),
+                  ),
+                  const VerticalDivider(),
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AutoSizeText(
+                        user?.displayName ?? "Suyog",
+                        style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      AutoSizeText(Hive.box("UserData").get("address") ?? "",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        maxFontSize: 12,
+                      )
+                    ],
+                  )
+                ],
+              ),
             ),
             AutoSizeText(
               "Looking for",
@@ -144,6 +149,9 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
             const Divider(
               color: Colors.transparent,
             ),
+            // ElevatedButton(onPressed: () {
+            //
+            // }, child: const Text("data")),
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.12,
               child: Row(
@@ -184,89 +192,118 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
             const Divider(
               color: Colors.transparent,
             ),
+            // QrImageView(
+            //   data: '1234567890',
+            //   version: QrVersions.auto,
+            //   size: 200.0,
+            // ),
             AutoSizeText("Maids around you",style: textTheme.titleMedium,),
-            BlocBuilder<DatabaseBloc,DatabaseStates>(builder: (context, state) {
-              if(state is DataLoadedState){
-                return ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount:state.maids.length ,
-                  itemBuilder: (context, index) {
-                    List prefWork = state.maids.elementAt(index)['preferredWork'];
-                    return InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AppointmentInfo(
-                              tag: "pfp$index",
-                              phone: state.maids.elementAtOrNull(index)['phone'],
-                              charges: state.maids.elementAtOrNull(index)['pricePerHour'],
-                              fullName: state.maids.elementAtOrNull(index)['fullName'],
-                              prefferedLocation: state.maids.elementAtOrNull(index)['preferredLocations'],
-                              prefferedWork: state.maids.elementAtOrNull(index)['preferredWork'],
-                              timeSLots: state.maids.elementAtOrNull(index)['timeSlots'],
-                              workingDay: state.maids.elementAtOrNull(index)['workingDays'],
-                            ),
-                          ),
-                        );
-                      },
-                      child: Card(
-                        surfaceTintColor: Colors.lightBlueAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Hero(
-                                tag: "pfp$index",
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: CachedNetworkImage(imageUrl: 'https://plus.unsplash.com/premium_photo-1681483534373-2d9250d3e1e9?q=80&w=2016&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                                    height: MediaQuery.sizeOf(context).height * 0.15,
-                                    progressIndicatorBuilder: (context, url, downloadProgress) =>
-                                        Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
-                                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                                  )
-                                  // Image.network(
-                                  //   ,
-                                  //   height: MediaQuery.sizeOf(context).height * 0.15,
-                                  // ),
-                                ),
-                              ),
-                              const VerticalDivider(),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            AutoSizeText(state.maids.elementAt(index)['fullName'],style: Theme.of(context).textTheme.titleLarge,),
-                                            ...List.generate(prefWork.length, (index) => AutoSizeText(prefWork.elementAtOrNull(index),style: Theme.of(context).textTheme.titleSmall,wrapWords: true,softWrap: true,),),
-                                          ],
-                                        ),
-                                        const Icon(Icons.shield)
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },);
-              }
-              return const SizedBox();
-            },)
+            // BlocConsumer<DatabaseBloc,DatabaseStates>(
+            //   listener: (context, state) {
+            //     if(state is DatabaseConnectedState){
+            //       context.read<DatabaseBloc>().getMaidCollection("");
+            //     }
+            //     if(state is DatabaseConnectedState){
+            //       // context.read<DatabaseBloc>().getAllCollection("");
+            //     }
+            //     if(state is DatabaseErrorState) {
+            //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Something went wrong.")));
+            //     }
+            //   },
+            //   builder: (context, state) {
+            //     if (state is DataLoadingState){
+            //       return const Center(child: CircularProgressIndicator(),);
+            //     }
+            //     if(state is DatabaseErrorState){
+            //       return Center(
+            //         child: Text(state.error),
+            //       );
+            //     }
+            //   if(state is DataLoadedState){
+            //     return ListView.builder(
+            //       physics: const NeverScrollableScrollPhysics(),
+            //       shrinkWrap: true,
+            //       itemCount:state.maids.length ,
+            //       itemBuilder: (context, index) {
+            //         if(state.maids.elementAt(index)['preferredWork'] != null){
+            //           List prefWork = state.maids.elementAt(index)['preferredWork'];
+            //           return InkWell(
+            //             onTap: () {
+            //               Navigator.push(
+            //                 context,
+            //                 MaterialPageRoute(
+            //                   builder: (context) => AppointmentInfo(
+            //                     tag: "pfp$index",
+            //                     phone: state.maids.elementAtOrNull(index)['phone'],
+            //                     charges: state.maids.elementAtOrNull(index)['pricePerHour'],
+            //                     fullName: state.maids.elementAtOrNull(index)['fullName'],
+            //                     preferredLocation: state.maids.elementAtOrNull(index)['preferredLocations'],
+            //                     preferredWork: state.maids.elementAtOrNull(index)['preferredWork'],
+            //                     timeSLots: state.maids.elementAtOrNull(index)['timeSlots'],
+            //                     workingDay: state.maids.elementAtOrNull(index)['workingDays'],
+            //                     rating: state.maids.elementAtOrNull(index)['rating']
+            //                   ),
+            //                 ),
+            //               );
+            //             },
+            //             child: Card(
+            //               surfaceTintColor: Colors.lightBlueAccent,
+            //               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            //               child: Padding(
+            //                 padding: const EdgeInsets.all(6.0),
+            //                 child: Row(
+            //                   crossAxisAlignment: CrossAxisAlignment.start,
+            //                   mainAxisSize: MainAxisSize.max,
+            //                   children: [
+            //                     Hero(
+            //                       tag: "pfp$index",
+            //                       child: ClipRRect(
+            //                           borderRadius: BorderRadius.circular(10),
+            //                           child: CachedNetworkImage(imageUrl: 'https://plus.unsplash.com/premium_photo-1681483534373-2d9250d3e1e9?q=80&w=2016&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+            //                             height: MediaQuery.sizeOf(context).height * 0.15,
+            //                             progressIndicatorBuilder: (context, url, downloadProgress) =>
+            //                                 Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
+            //                             errorWidget: (context, url, error) => const Icon(Icons.error),
+            //                           )
+            //                         // Image.network(
+            //                         //   ,
+            //                         //   height: MediaQuery.sizeOf(context).height * 0.15,
+            //                         // ),
+            //                       ),
+            //                     ),
+            //                     const VerticalDivider(),
+            //                     Expanded(
+            //                       child: Column(
+            //                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //                         children: [
+            //                           Row(
+            //                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //                             crossAxisAlignment: CrossAxisAlignment.start,
+            //                             children: [
+            //                               Column(
+            //                                 crossAxisAlignment: CrossAxisAlignment.start,
+            //                                 children: [
+            //                                   AutoSizeText(state.maids.elementAt(index)['fullName'],style: Theme.of(context).textTheme.titleLarge,),
+            //                                   ...List.generate(prefWork.length, (index) => AutoSizeText(prefWork.elementAtOrNull(index),style: Theme.of(context).textTheme.titleSmall,wrapWords: true,softWrap: true,),),
+            //                                 ],
+            //                               ),
+            //                               const Icon(Icons.shield)
+            //                             ],
+            //                           ),
+            //                         ],
+            //                       ),
+            //                     )
+            //                   ],
+            //                 ),
+            //               ),
+            //             ),
+            //           );
+            //         }
+            //         return null;
+            //       },);
+            //   }
+            //   return const SizedBox();
+            // },)
           ],
         ),
       ),

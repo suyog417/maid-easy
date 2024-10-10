@@ -3,8 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maid_easy/api/database.dart';
 import 'package:maid_easy/screens/bloc/categories_bloc.dart';
-import 'package:maid_easy/screens/list_maids.dart';
+import 'package:maid_easy/screens/create_job.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
 class Categories extends StatelessWidget {
   const Categories({super.key});
@@ -38,16 +40,17 @@ class Categories extends StatelessWidget {
             context.read<CategoriesCubit>().search(value);
           },
         ),
-        BlocBuilder<CategoriesCubit,CategoriesStates>(builder: (context, state) {
-          if(state is CategoriesLoadedState){
+        BlocBuilder<DatabaseBloc,DatabaseStates>(builder: (context, state) {
+          if(state is DataLoadedState){
             return ListView.builder(
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: state.categories.length,
+              itemCount: state.services.length,
               shrinkWrap: true,
               itemBuilder: (context, index) {
+                mongo.ObjectId objId = state.services.first["_id"];
               return InkWell(
                 onTap: () {
-                  Navigator.push(context, CupertinoPageRoute(builder: (context) => ListMaids(filter: state.categories.elementAt(index)),));
+                  Navigator.push(context, CupertinoPageRoute(builder: (context) => CreateJob(serviceId: objId.oid,),));
                 },
                 child: Card(
                   color: Colors.lightBlueAccent.shade100,
@@ -87,7 +90,7 @@ class Categories extends StatelessWidget {
                               padding: const EdgeInsets.only(right: 16.0,top: 24,left: 16,bottom: 16),
                               child: Row(
                                   children: [
-                                    Text(state.categories.elementAt(index),style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                    Text(state.services.elementAtOrNull(index)["name"],style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: Theme.of(context).colorScheme.surface
                                     ),),
