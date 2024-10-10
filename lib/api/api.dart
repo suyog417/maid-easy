@@ -16,7 +16,7 @@ class API {
 class APIHandler{
 
   APIHandler(){
-    recommendations.options.baseUrl = "https://maideasy-flask-app.onrender.com";
+    // recommendations.options.baseUrl = "";
     recommendations.interceptors.add(PrettyDioLogger());
   }
   final API _api = API();

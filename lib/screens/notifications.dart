@@ -3,6 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maid_easy/api/database.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class Notifications extends StatelessWidget {
   const Notifications({super.key});
@@ -50,32 +51,7 @@ class Notifications extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          FilledButton(onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => AiBarcodeScanner(
-                              onDetect: (BarcodeCapture capture) {
-                                final String? scannedValue =
-                                    capture.barcodes.first.rawValue;
-                                debugPrint("Barcode scanned: $scannedValue");
-                                Navigator.pop(context);
-                              },
-                              successColor: Colors.green,
-                              hideGalleryIcon: true,
-                              onDispose: () {
-                                /// This is called when the barcode scanner is disposed.
-                                /// You can write your own logic here.
-                                debugPrint("Barcode scanner disposed!");
-                              },
-                              hideGalleryButton: false,
-                              controller: MobileScannerController(
-                                detectionSpeed: DetectionSpeed.noDuplicates,
-                              ),
-                            ),));
-                          },
-                            style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.all(8)
-                            ),
-                            child: const Text("Mark as complete"),
-                          ),
+                          AspectRatio(aspectRatio: 1,child: QrImageView(data: contracts.values.elementAt(index)['jobId']),),
                           FilledButton(onPressed: () {},
                             style: FilledButton.styleFrom(
                               padding: const EdgeInsets.all(8)

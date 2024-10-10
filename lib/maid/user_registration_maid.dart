@@ -53,7 +53,7 @@ class _UserRegistrationMaidState extends State<UserRegistrationMaid> {
             const Divider(color: Colors.transparent,),
             _registerTextInputField("Address", "Address", (value) => null, TextInputType.number),
             const Divider(color: Colors.transparent,),
-            _registerTextInputField("Mobile Number", "Mobile Number", (value) => null, TextInputType.number),
+            _registerTextInputField("Mobile .\4", "Mobile Number", (value) => null, TextInputType.number),
             const Divider(color: Colors.transparent,),
             _registerTextInputField("Aadhar Number", "Aadhar Number", (value) => null, TextInputType.number),
             const Divider(color: Colors.transparent,),

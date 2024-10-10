@@ -2,10 +2,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
-import 'package:maid_easy/utils/constants.dart';
 import 'package:maid_easy/screens/home_screen.dart';
-import 'package:location/location.dart' as loc;
-import 'package:geocoding/geocoding.dart';
+import 'package:maid_easy/utils/constants.dart';
 
 class AddAddress extends StatefulWidget {
   const AddAddress({super.key});
@@ -17,11 +15,11 @@ class AddAddress extends StatefulWidget {
 class _AddAddressState extends State<AddAddress> {
   final formKey = GlobalKey<FormState>();
   final TextEditingController _address = TextEditingController();
-  late String street;
-  late String locality;
-  late String subLocality;
-  late String postalCode;
-  late String adminArea;
+  // late String street;
+  // late String locality;
+  // late String subLocality;
+  // late String postalCode;
+  // late String adminArea;
   List<String> selected = [];
 
   @override
@@ -30,6 +28,8 @@ class _AddAddressState extends State<AddAddress> {
     _address.dispose();
     super.dispose();
   }
+
+  String _selectedItem = "Katraj";
 
   @override
   Widget build(BuildContext context) {
@@ -45,58 +45,77 @@ class _AddAddressState extends State<AddAddress> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            TextFormField(
-              controller: _address,
-              decoration: InputDecoration(
-                  border: const UnderlineInputBorder(),
-                  enabledBorder: const UnderlineInputBorder(),
-                hintText: "Address",
-                label: const AutoSizeText("Address"),
-                suffix: IconButton(icon: const Icon(Icons.my_location,),onPressed: () async {
-                  if(await loc.Location().hasPermission() == loc.PermissionStatus.denied){
-                    loc.Location().requestPermission();
-                  }
-                  if(await loc.Location().hasPermission() == loc.PermissionStatus.granted){
-                    // AppSettings.openAppSettings(type: AppSettingsType.location)
-                    if( await loc.Location().serviceEnabled()){
-                      loc.LocationData _loc = await loc.Location().getLocation();
-                      List<Placemark> placeMarks = await placemarkFromCoordinates(_loc.latitude!.toDouble(),_loc.longitude!.toDouble());
-                      Placemark curr = placeMarks.first;
-                      setState(() {
-                        street = curr.street!;
-                        subLocality = curr.subLocality!;
-                        locality = curr.locality!;
-                        adminArea = curr.administrativeArea!;
-                        postalCode = curr.postalCode!;
-                        _address.text = "${curr.street},${curr.subLocality},${curr.locality},${curr.administrativeArea},${curr.postalCode}";
-                      });
-                    }
-                    else{
-                      loc.Location().requestService();
-                    }
-                  }
-                },)
-              ),
-            ),
-            Wrap(
-              spacing: 6,
-              children: List.generate(
-                localities.length,
-                (index) => ChoiceChip.elevated(
-                  showCheckmark: true,
-                    label: Text(localities.elementAt(index)),
-                    onSelected: (value) {
-                      setState(() {
-                        if(value) {
-                          selected.add(localities.elementAt(index));
-                        }else {
-                          selected.remove(localities.elementAt(index));
-                        }
-                      });
-                    },
-                    selected: selected.contains(localities.elementAt(index))),
+            DropdownButtonHideUnderline(
+              child: DropdownButton(
+                items: List.generate(
+                  localities.length,
+                  (index) {
+                    return DropdownMenuItem(
+                      value: localities.elementAt(index),
+                      child: Text(localities.elementAt(index)),
+                    );
+                  },
+                ),
+                value: _selectedItem,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedItem = value!;
+                  });
+                },
               ),
             )
+            // TextFormField(
+            //   controller: _address,
+            //   decoration: InputDecoration(
+            //       border: const UnderlineInputBorder(),
+            //       enabledBorder: const UnderlineInputBorder(),
+            //     hintText: "Address",
+            //     label: const AutoSizeText("Address"),
+            //     suffix: IconButton(icon: const Icon(Icons.my_location,),onPressed: () async {
+            //       if(await loc.Location().hasPermission() == loc.PermissionStatus.denied){
+            //         loc.Location().requestPermission();
+            //       }
+            //       if(await loc.Location().hasPermission() == loc.PermissionStatus.granted){
+            //         // AppSettings.openAppSettings(type: AppSettingsType.location)
+            //         if( await loc.Location().serviceEnabled()){
+            //           loc.LocationData _loc = await loc.Location().getLocation();
+            //           List<Placemark> placeMarks = await placemarkFromCoordinates(_loc.latitude!.toDouble(),_loc.longitude!.toDouble());
+            //           Placemark curr = placeMarks.first;
+            //           setState(() {
+            //             street = curr.street!;
+            //             subLocality = curr.subLocality!;
+            //             locality = curr.locality!;
+            //             adminArea = curr.administrativeArea!;
+            //             postalCode = curr.postalCode!;
+            //             _address.text = "${curr.street},${curr.subLocality},${curr.locality},${curr.administrativeArea},${curr.postalCode}";
+            //           });
+            //         }
+            //         else{
+            //           loc.Location().requestService();
+            //         }
+            //       }
+            //     },)
+            //   ),
+            // ),
+            // Wrap(
+            //   spacing: 6,
+            //   children: List.generate(
+            //     localities.length,
+            //     (index) => ChoiceChip.elevated(
+            //       showCheckmark: true,
+            //         label: Text(localities.elementAt(index)),
+            //         onSelected: (value) {
+            //           setState(() {
+            //             if(value) {
+            //               selected.add(localities.elementAt(index));
+            //             }else {
+            //               selected.remove(localities.elementAt(index));
+            //             }
+            //           });
+            //         },
+            //         selected: selected.contains(localities.elementAt(index))),
+            //   ),
+            // )
           ],
         ),
       ),
@@ -108,12 +127,12 @@ class _AddAddressState extends State<AddAddress> {
               onPressed: () {
                 final box = Hive.box("UserData");
                 box.putAll({
-                  "address": _address.text.trim(),
-                  "locality": subLocality,
-                  "city": locality,
-                  "state": adminArea,
-                  "street": street,
-                  "postalCode": postalCode,
+                  // "address": _address.text.trim(),
+                  "locality": _selectedItem,
+                  // "city": locality,
+                  // "state": adminArea,
+                  // "street": street,
+                  // "postalCode": postalCode,
                 });
                 box.put("address", _address.text.trim()).whenComplete(
                   () {
